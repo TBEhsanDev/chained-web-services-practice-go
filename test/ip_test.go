@@ -4,13 +4,18 @@ import (
 	"IpProjectGo/ip"
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var TestUrl string = "http://127.0.0.1/api/"
@@ -19,6 +24,7 @@ const RequestNumber = 200
 
 func TestWithJson(t *testing.T) {
 	logFileLinesNumBefore := LogFileLines()
+	mongodbLinesNumBefore := MongodbLInesCount()
 	reqJson, respJson := Setup(ip.D{Student: "ali"})
 	for i := 0; i < RequestNumber; i++ {
 		var response *http.Response
@@ -29,10 +35,15 @@ func TestWithJson(t *testing.T) {
 		CheckResponse(t, response, respJson)
 	}
 	assert.Equal(t, LogFileLines(), logFileLinesNumBefore+RequestNumber)
+	time.Sleep(4 * time.Second)
+	assert.Equal(t, MongodbLInesCount(), mongodbLinesNumBefore+RequestNumber)
+
 }
 
 func TestWithoutJson(t *testing.T) {
 	logFileLinesNumBefore := LogFileLines()
+	mongodbLinesNumBefore := MongodbLInesCount()
+
 	reqJson, respJson := Setup(ip.D{})
 	for i := 0; i < RequestNumber; i++ {
 		var response *http.Response
@@ -43,7 +54,38 @@ func TestWithoutJson(t *testing.T) {
 		CheckResponse(t, response, respJson)
 	}
 	assert.Equal(t, LogFileLines(), logFileLinesNumBefore+RequestNumber)
+	time.Sleep(4 * time.Second) //for logstash
+	assert.Equal(t, MongodbLInesCount(), mongodbLinesNumBefore+RequestNumber)
 
+}
+func MongodbLInesCount() int64 {
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		fmt.Println("mongo.Connect() ERROR:", err)
+		os.Exit(1)
+	}
+	coll := client.Database("ip_db").Collection("ip_collection")
+	estCount, estCountErr := coll.EstimatedDocumentCount(context.TODO())
+	if estCountErr != nil {
+		panic(estCountErr)
+	}
+	return estCount
+	/*cursor, err := coll.Find(context.TODO(), bson.D{})
+	if err != nil {
+		fmt.Println("Finding all documents ERROR:", err)
+		defer cursor.Close(context.TODO())
+	} else {
+		for cursor.Next(context.TODO()) {
+			var result bson.M
+			err := cursor.Decode(&result)
+			if err != nil {
+				fmt.Println("cursor.Next() error:", err)
+				os.Exit(1)
+			} else {
+			}
+		}
+	}*/
 }
 func LogFileLines() int {
 	lineCount := 0
