@@ -2,6 +2,7 @@ package logger
 
 import (
 	"IpProjectGo/ip"
+	"IpProjectGo/ratelimit"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -19,17 +20,22 @@ type Logger struct {
 }
 
 func Log(c *gin.Context) {
+	var error500 ratelimit.Error
+	error500.Detail = "Bad Gateway"
 	var logData Logger
 	var data ip.D
 	GetRequestData(c, &data, &logData)
 	writeLog(logData)
-	response := RequestToIp(data)
-	defer response.Body.Close()
-	respData := ReturnResponse(response)
-	c.JSON(200, respData)
+	response, err := RequestToIp(data)
+	if err == nil {
+		defer response.Body.Close()
+		respData := ReturnResponse(response)
+		c.JSON(200, respData)
+	} else {
+		c.JSON(500, error500)
+	}
 }
 func GetRequestData(c *gin.Context, data *ip.D, logData *Logger) {
-
 	Ip := c.Request.Header.Get("X-Real-IP")
 	err := c.BindJSON(&data)
 	if err != nil {
@@ -40,9 +46,6 @@ func GetRequestData(c *gin.Context, data *ip.D, logData *Logger) {
 	logData.Time = time.Now().String()
 }
 func ReturnResponse(response *http.Response) ip.D {
-	if response.StatusCode != 200 {
-		fmt.Println("Bad Gateway:", response.StatusCode)
-	}
 
 	respJson, _ := ioutil.ReadAll(response.Body)
 	respData := ip.D{}
@@ -51,7 +54,7 @@ func ReturnResponse(response *http.Response) ip.D {
 	}
 	return respData
 }
-func RequestToIp(data ip.D) *http.Response {
+func RequestToIp(data ip.D) (*http.Response, error) {
 	body, err := json.Marshal(data)
 	if err != nil {
 		fmt.Println(err)
@@ -64,19 +67,14 @@ func RequestToIp(data ip.D) *http.Response {
 	request.Header.Set("X-Real-IP", data.Ip)
 	client := &http.Client{}
 	response, err := client.Do(request)
-	if err != nil {
-		fmt.Println("HTTP call failed:", err)
-	}
-	return response
+	return response, err
 }
 func writeLog(logData Logger) {
 	f, err := os.OpenFile("./log.jsonl", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		fmt.Println(err)
-		return
 	}
 	defer f.Close()
-
 	encoder := json.NewEncoder(f)
 	encoder.Encode(logData)
 }
