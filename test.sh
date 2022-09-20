@@ -1,0 +1,1 @@
+cd ./test && go test -v
