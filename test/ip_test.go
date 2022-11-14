@@ -35,7 +35,7 @@ func TestWithJson(t *testing.T) {
 	})
 	logFileLinesNumBefore := LogFileLines()
 	mongodbLinesNumBefore := MongodbLInesCount()
-	reqJson, respJson := Setup(ip.D{Student: "ali"})
+	reqJson, respJson := Setup(ip.D{Data: "ali"})
 	client.Del("127.0.0.1")
 	for i := 0; i < RequestNumber; i++ {
 		var response *http.Response

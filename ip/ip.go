@@ -7,8 +7,8 @@ import (
 )
 
 type D struct {
-	Student string `json`
-	Ip      string `json`
+	Data string `json`
+	Ip   string `json`
 }
 
 func Ip(c *gin.Context) {

@@ -15,8 +15,8 @@ import (
 )
 
 type Logger struct {
-	Time    string
-	Student string
+	Time string
+	Data string
 }
 
 func Log(c *gin.Context) {
@@ -42,7 +42,7 @@ func GetRequestData(c *gin.Context, data *ip.D, logData *Logger) {
 		fmt.Println(err)
 	}
 	data.Ip = Ip
-	logData.Student = data.Student
+	logData.Data = data.Data
 	logData.Time = time.Now().String()
 }
 func ReturnResponse(response *http.Response) ip.D {
