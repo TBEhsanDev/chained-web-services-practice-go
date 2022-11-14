@@ -2,7 +2,7 @@
 ‫
 
 
-this is a teaching project that has 4 steps.in this project clients send post request to server and server get some information from request,save posted
+this is a practicing project that has 4 steps.in this project clients send post request to server and server get some information from request,save posted
 data as log in file and return request body in addition request ip.
 ##  necessary tools:
 1. nginx(used as proxy server)
