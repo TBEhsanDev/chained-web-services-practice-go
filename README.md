@@ -1,4 +1,4 @@
-# IpProjectGo</br>
+# chained-web-services-practice-go</br>
 ‫
 
 
@@ -23,3 +23,7 @@ data as log in file and return request body in addition request ip.
  and code coverage is used too. and code coverage is used too.
 ## instruction for run and test:
 > for run servers ,run bash script  **./run.sh**.for test project run bash script **./test.sh**.
+## instruction for dockerize app:
+>first **docker build -t ip .** to create a image that named ip.then **docker run -it --name ip ip**to create a container that named ip.this run our 
+ our app.**docker ps -a** list the containers.then in another terminal tab run **docker exec -it 'container_id' /bin/bash** to create bash terminal in
+ that container .then we can request in that bash.
